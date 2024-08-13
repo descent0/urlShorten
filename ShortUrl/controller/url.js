@@ -2,23 +2,26 @@ const { nanoid } = require("nanoid");
 const { url } = require("../models/url");
 
 const handleGenerateShortUrl = async (req, res) => {
-  const body = req.body;
+  const { redirectUrl } = req.body;
 
-  if (!body || !body.redirectURL) {
-    return res.status(404).json({ msg: "URL required" });
+  if (!redirectUrl) {
+    return res.status(400).json({ msg: "URL required" }); // 400 Bad Request for missing URL
   }
 
   const ShortId = nanoid(8);
-  
-  await url.create({
-    shortId: ShortId,
-    redirectURL: body.redirectURL,
-    visitHistory: [],
-  });
 
-  return res.json({ id: ShortId });
+  try {
+    await url.create({
+      shortId: ShortId,
+      redirectUrl: redirectUrl, // Consistent naming
+      visitHistory: [],
+    });
+
+    return res.status(201).json({ id: ShortId }); // 201 Created
+  } catch (error) {
+    return res.status(500).json({ msg: "Internal server error" }); // Handle potential errors
+  }
 };
-
 
 module.exports = {
   handleGenerateShortUrl,
